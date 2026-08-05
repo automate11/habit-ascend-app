@@ -427,6 +427,36 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .spark{position:absolute;font-size:22px;animation:spark 1s ease-out forwards;}
 @keyframes spark{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.4) translateY(-20px)}}
 .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;}
+
+/* ===== 移动端 / Capacitor 原生 App 适配 =====
+ * 桌面端: 居中 396×850 "手机模拟器" + 阴影,看起来像截图
+ * 真机 / Capacitor: 全屏铺满,无圆角,沉浸式
+ */
+@media (max-width: 500px){
+  body{padding:0;align-items:stretch;}
+  .phone{
+    width:100%;
+    max-width:100%;
+    border-radius:0;
+    box-shadow:none;
+    height:100vh;
+    height:100dvh;  /* 处理移动浏览器地址栏动态高度 */
+    border-left:none;
+    border-right:none;
+  }
+  /* 底部导航条也要去掉圆角 */
+  .bottom-nav{border-radius:0;}
+  /* 安全区适配(刘海屏/小白条) */
+  @supports(padding: max(0px)){
+    .hud{padding-top:max(14px, env(safe-area-inset-top));}
+    .bottom-nav{padding-bottom:max(8px, env(safe-area-inset-bottom));}
+  }
+}
+/* 横屏小高度也走全屏(平板/折叠屏) */
+@media (max-height: 500px) and (orientation: landscape){
+  body{padding:0;}
+  .phone{width:100%;max-width:100%;border-radius:0;height:100vh;height:100dvh;box-shadow:none;}
+}
 </style>
 </head>
 <body>
@@ -543,9 +573,24 @@ function loadState(){
   }
 }
 function resetState(){
-  if(!confirm('确定要清空所有数据吗？\n（任务、愿望、属性、休息卡全部归零，恢复 demo 演示数据）')) return;
+  if(!confirm('确定要清空所有数据吗？\n（任务、愿望、属性、休息卡全部归零）')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
+}
+
+// 全新开始(直接写空状态,不等 reload)
+function startFresh(){
+  if(!confirm('确定要清空所有数据并重新开始吗？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  // 直接覆写 state 为空存档
+  state.level=1; state.xp=0; state.xpmax=levelReq(1);
+  state.coins=0; state.happiness=0; state.streak=0;
+  state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
+  state.tasks=[]; state.wishes=[];
+  state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  saveState();
+  renderToday();
+  alert('已清空,开始新旅程 🌱');
 }
 
 const ATTRS = {
@@ -641,6 +686,18 @@ let bonusEditing=false;     // 今日奖励编辑表单开关
 
 // 启动时尝试加载存档
 loadState();
+
+// 如果是 Capacitor 原生 App 且无存档:跳过 demo,空状态启动(自用版不留示例数据)
+const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+if(IS_NATIVE && !localStorage.getItem(STORAGE_KEY)){
+  state.level=1; state.xp=0; state.xpmax=levelReq(1);
+  state.coins=0; state.happiness=0; state.streak=0;
+  state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
+  state.tasks=[]; state.wishes=[];
+  state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  saveState();
+  console.log('[Init] Capacitor 原生首次启动,使用空状态');
+}
 // 今日通关奖励推荐预设
 const BONUS_PRESETS=[
   {ico:'🎬',name:'看一部电影',coin:15,exp:15},
@@ -911,7 +968,7 @@ function renderChar(){
   });
   // 数据管理：重置存档（角落小字，避免误触）
   h+=`<div style="margin-top:18px;text-align:center;font-size:10px;color:var(--muted);opacity:.7">
-    数据自动保存在本机浏览器 · <a href="#" onclick="resetState();return false;" style="color:var(--muted);text-decoration:underline">重置存档</a>
+    数据自动保存在本机 · <a href="#" onclick="startFresh();return false;" style="color:var(--muted);text-decoration:underline">清空并重新开始</a>
   </div>`;
   el.innerHTML=h;
   showTierInfo(TIERS.indexOf(tierFor(state.level)));
