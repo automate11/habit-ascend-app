@@ -528,6 +528,8 @@ function saveState(){
       tasks: state.tasks, wishes: state.wishes,
       dailyBonus: state.dailyBonus, taskFilter: state.taskFilter,
       _lastCheckDay: state._lastCheckDay,
+      // 6 维属性值（修复老 bug:之前直接改 ATTRS 全局常量,刷新就丢）
+      attrs: Object.fromEntries(Object.entries(ATTRS).map(([k,v])=>[k, v.val])),
       wishFilter: wishFilter, achFilter: achFilter,
       _savedAt: Date.now()
     };
@@ -559,6 +561,12 @@ function loadState(){
       taskFilter: s.taskFilter ?? '全部',
       _lastCheckDay: s._lastCheckDay
     });
+    // 恢复属性值(老存档可能没 attrs 字段)
+    if(s.attrs && typeof s.attrs === 'object'){
+      Object.keys(ATTRS).forEach(k=>{
+        if(typeof s.attrs[k] === 'number') ATTRS[k].val = s.attrs[k];
+      });
+    }
     // 派生字段重算
     state.xpmax = levelReq(state.level);
     state.title = titleFor(state.level);
@@ -580,7 +588,7 @@ function resetState(){
 
 // 全新开始(直接写空状态,不等 reload)
 function startFresh(){
-  if(!confirm('确定要清空所有数据并重新开始吗？')) return;
+  if(!confirm('确定要清空所有数据并重新开始吗?')) return;
   localStorage.removeItem(STORAGE_KEY);
   // 直接覆写 state 为空存档
   state.level=1; state.xp=0; state.xpmax=levelReq(1);
@@ -588,18 +596,20 @@ function startFresh(){
   state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  // 6 维属性值也归零
+  Object.keys(ATTRS).forEach(k=>ATTRS[k].val=0);
   saveState();
   renderToday();
   alert('已清空,开始新旅程 🌱');
 }
 
 const ATTRS = {
-  '体魄':{color:'#ff6b81', val:100, icon:'💪', desc:'运动锻炼 · 早睡早起 · 喝水作息 · 一切让身体更好的事'},
-  '技能':{color:'#4d9bff', val:28, icon:'🎓', desc:'读书学习 · 编程外语 · 专业考证 · 一切可习得的硬技能'},
-  '创造':{color:'#9b6dff', val:16, icon:'🎨', desc:'写作绘画 · 编曲设计 · 拍视频 · 一切输出型创造'},
-  '生活':{color:'#2ecc8f', val:33, icon:'🏠', desc:'家务整理 · 烹饪修理 · 把生活打理好的手艺'},
-  '社交':{color:'#ff8c42', val:11, icon:'💬', desc:'联系朋友 · 陪伴家人 · 参加活动 · 关系维护'},
-  '魅力':{color:'#e056a0', val:8,  icon:'✨', desc:'护肤保养 · 塑形健身 · 穿搭打扮 · 一切让自己状态更好的事'},
+  '体魄':{color:'#ff6b81', val:0, icon:'💪', desc:'运动锻炼 · 早睡早起 · 喝水作息 · 一切让身体更好的事'},
+  '技能':{color:'#4d9bff', val:0, icon:'🎓', desc:'读书学习 · 编程外语 · 专业考证 · 一切可习得的硬技能'},
+  '创造':{color:'#9b6dff', val:0, icon:'🎨', desc:'写作绘画 · 编曲设计 · 拍视频 · 一切输出型创造'},
+  '生活':{color:'#2ecc8f', val:0, icon:'🏠', desc:'家务整理 · 烹饪修理 · 把生活打理好的手艺'},
+  '社交':{color:'#ff8c42', val:0, icon:'💬', desc:'联系朋友 · 陪伴家人 · 参加活动 · 关系维护'},
+  '魅力':{color:'#e056a0', val:0, icon:'✨', desc:'护肤保养 · 塑形健身 · 穿搭打扮 · 一切让自己状态更好的事'},
 };
 // 等级称号阶梯（科学梯度：每5级一段，难度递增）
 const TIERS=[
@@ -695,6 +705,7 @@ if(IS_NATIVE && !localStorage.getItem(STORAGE_KEY)){
   state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  Object.keys(ATTRS).forEach(k=>ATTRS[k].val=0);  // 属性值也归零
   saveState();
   console.log('[Init] Capacitor 原生首次启动,使用空状态');
 }
