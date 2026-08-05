@@ -1,0 +1,27 @@
+{
+  "appId": "com.habitascend.app",
+  "appName": "习惯进阶",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "backgroundColor": "#dff7ea",
+      "androidSplashResourceName": "splash",
+      "splashFullScreen": false,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "DEFAULT",
+      "backgroundColor": "#dff7ea",
+      "overlaysWebView": false
+    }
+  }
+}

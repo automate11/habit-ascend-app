@@ -1,0 +1,21 @@
+{
+  "name": "habit-ascend-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "习惯进阶 - 游戏化习惯打卡 App (Capacitor Android 包装版)",
+  "scripts": {
+    "sync": "cap sync android",
+    "build:apk": "cd android && gradlew assembleDebug",
+    "open:android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/local-notifications": "^6.0.1",
+    "@capacitor/status-bar": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
