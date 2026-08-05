@@ -56,7 +56,7 @@ jobs:
 
       # 7. 打 APK
       - name: 打 Debug APK
-        run: cd android && ./gradlew assembleDebug --no-daemon
+        run: cd android && chmod +x ./gradlew && ./gradlew assembleDebug --no-daemon
 
       # 8. 上传 APK 到 GitHub Artifacts（用户可在 Actions 页面下载）
       - name: 上传 APK
