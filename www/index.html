@@ -445,7 +445,7 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .cal-cell .cal-done{position:absolute;bottom:2px;display:flex;gap:1.5px;align-items:center;justify-content:center;}
 .cal-cell .cal-done span{width:4px;height:4px;border-radius:50%;background:var(--muted);opacity:.5;transition:.2s;}
 .cal-cell .cal-done span.done{background:var(--xp1);opacity:1;box-shadow:0 0 3px rgba(31,200,169,.6);}
-.cal-cell .cal-done span.full-dot{width:7px;height:7px;background:linear-gradient(135deg,var(--xp1),var(--xp2));box-shadow:0 0 5px rgba(255,184,0,.6);}
+.cal-cell .cal-done span.full-dot{width:7px;height:7px;background:var(--xp2);box-shadow:0 0 5px rgba(255,184,0,.6);}
 .cal-cell:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(31,200,169,.2);}
 .cal-cell.selected{background:linear-gradient(135deg,var(--xp1),var(--xp2));color:#fff;box-shadow:0 6px 18px rgba(31,200,169,.4);}
 .cal-legend{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:10px;color:var(--muted);}
@@ -1196,8 +1196,11 @@ function renderCalendar(){
     const isSelected = ds === calSelectedDate;
 
     // 渲染点:全清=单黄点;否则每个应有任务一个点(完成=绿,未完成=灰)
+    // 未来日期不显示点(没意义)
     let dotsHtml = '';
-    if(isFullComplete){
+    if(isFuture){
+      // 未来日期:无点
+    } else if(isFullComplete){
       dotsHtml = `<div class="cal-done"><span class="full-dot"></span></div>`;
     } else if(expectedToday>0){
       const dotsArr = expectedIds.map(id=>{
