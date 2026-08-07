@@ -953,7 +953,7 @@ function renderToday(){
   h+=`<div class="cal-entry" onclick="openCalendar()">
     <div class="ce-ico">📅</div>
     <div class="ce-body">
-      <div class="ce-title">日历全览</div>
+      <div class="ce-title">打卡全览日历</div>
       <div class="ce-desc">${monthNames5[now5.getMonth()]} · 本月 ${monthDoneNow}/${monthTotalNow || 0} 完成</div>
     </div>
     <div class="ce-arrow">›</div>
@@ -1312,17 +1312,7 @@ function renderWish(){
   if(fav) loot+=`<div class="lb">${fav.img?'🖼️':(fav.ico||'🎁')} 这个月已经给自己获得了第 ${fav.monthCount} 个「${fav.name}」啦！</div>`;
   else loot+=`<div class="lb">本月还没开启愿望，去完成任务赚币吧！</div>`;
   loot+=`<div class="lm">坚持打卡，把每一个小愿望都变成到手的奖励 ✨</div></div>`;
-  // v40.5 休息卡直接放战利品下方,只一个小"系统道具"徽章
-  const canBuyRestCard = state.coins >= REST_CARD_PRICE;
-  let sysItem = `<div class="chest" style="margin-top:10px;border:1px dashed rgba(31,200,169,.35);background:rgba(31,200,169,.04)">
-    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:24px">🛌</div>
-    <div class="cinfo">
-      <div class="cname">休息卡 <span style="font-size:9px;background:rgba(31,200,169,.15);color:#0a8b75;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">系统道具</span></div>
-      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张</div>
-    </div>
-    <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
-  </div>`;
-  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+loot+sysItem;
+  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+loot;
   // 宝箱筛选：全部 / 可兑换 / 不可兑换
   const wf=wishFilter||'全部';
   const wishAvail=state.wishes.filter(w=>state.coins>=w.cost).length;
@@ -1332,6 +1322,16 @@ function renderWish(){
   h+=`<button class="${wf==='可兑换'?'on':''}" onclick="setWishFilter('可兑换')">可兑换 ${wishAvail}</button>`;
   h+=`<button class="${wf==='不可兑换'?'on':''}" onclick="setWishFilter('不可兑换')">不可兑换 ${wishLocked}</button>`;
   h+='</div>';
+  // v40.5.3 休息卡放在筛选 tabs 正下方(系统道具单独显示)
+  const canBuyRestCard = state.coins >= REST_CARD_PRICE;
+  h+=`<div class="chest" style="margin-top:10px;border:1px dashed rgba(31,200,169,.35);background:rgba(31,200,169,.04)">
+    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:24px">🛌</div>
+    <div class="cinfo">
+      <div class="cname">休息卡 <span style="font-size:9px;background:rgba(31,200,169,.15);color:#0a8b75;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">系统道具</span></div>
+      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张</div>
+    </div>
+    <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
+  </div>`;
   const wfShow=state.wishes.filter(w=>{
     if(wf==='全部')return true;
     if(wf==='可兑换')return state.coins>=w.cost;
