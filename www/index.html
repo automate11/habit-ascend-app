@@ -402,16 +402,17 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .upload-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#fafbfa;border:1px dashed var(--line);color:var(--muted);transition:.15s;}
 .upload-btn:hover{border-color:var(--xp1);color:#1e9b86;background:rgba(31,200,169,.06);}
 
-/* tabbar：4 个，今日居中放大 */
+/* tabbar：3 个，今日居中放大 */
 .tabbar{display:flex;background:#fff;border-top:1px solid var(--line);padding:6px 0 8px;}
 .tab{flex:1;text-align:center;padding:5px 0;font-size:10px;color:var(--muted);cursor:pointer;position:relative;}
 .tab .ti{font-size:18px;display:block;margin-bottom:2px;filter:grayscale(.5);opacity:.7;transition:.2s;}
 .tab.active{color:#1e9b86;font-weight:700;}
 .tab.active .ti{filter:none;opacity:1;}
-.tab.center .ti{font-size:24px;}
+.tab.center .ti{font-size:26px;}
 .tab.center.active .ti{transform:translateY(-3px) scale(1.15);filter:drop-shadow(0 0 8px rgba(31,200,169,.7));}
 .tab.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:26px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--xp1),var(--xp2));}
+.tabbar.hidden{display:none;}
 
 /* 特效 */
 .fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:50;}
@@ -459,6 +460,20 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .cal-stats .cs{display:flex;flex-direction:column;align-items:center;gap:2px;}
 .cal-stats .cs-num{font-size:18px;font-weight:900;color:var(--xp1);}
 .cal-stats .cs-lbl{font-size:10px;color:var(--muted);}
+
+/* v40.5 今日页日历入口 */
+.cal-entry{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-top:14px;border-radius:14px;background:linear-gradient(135deg,rgba(31,200,169,.1),rgba(255,184,0,.08));border:1px solid rgba(31,200,169,.2);cursor:pointer;transition:.2s;}
+.cal-entry:active{transform:scale(.98);}
+.cal-entry .ce-ico{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--xp1),var(--xp2));display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;}
+.cal-entry .ce-body{flex:1;}
+.cal-entry .ce-title{font-size:13px;font-weight:800;color:var(--text);}
+.cal-entry .ce-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+.cal-entry .ce-arrow{color:var(--muted);font-size:18px;}
+
+/* v40.5 日历页返回按钮 */
+.cal-back{position:sticky;top:0;display:flex;align-items:center;gap:6px;padding:8px 4px 12px;font-size:13px;font-weight:700;color:var(--xp1);cursor:pointer;background:linear-gradient(180deg,var(--phone,#fff) 80%,transparent);z-index:5;}
+.cal-back:hover{opacity:.7;}
+.cal-back::before{content:'‹';font-size:22px;font-weight:900;line-height:1;}
 
 /* ===== 移动端 / Capacitor 原生 App 适配 =====
  * 桌面端: 居中 396×850 "手机模拟器" + 阴影,看起来像截图
@@ -520,7 +535,6 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
   <div class="tabbar">
     <div class="tab" data-t="char"><span class="ti">🛡️</span>角色</div>
     <div class="tab center active" data-t="today"><span class="ti">⚔️</span>今日</div>
-    <div class="tab" data-t="calendar"><span class="ti">📅</span>日历</div>
     <div class="tab" data-t="wish"><span class="ti">🎁</span>愿望</div>
   </div>
 
@@ -928,6 +942,21 @@ function renderToday(){
       </div>
     </div>`;
   }
+  // v40.5 日历入口卡片(在今日页内部)
+  const monthNames5=['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  const now5=new Date();
+  const monthDoneNow = Object.keys(state.completions||{}).filter(d=>d.startsWith(`${now5.getFullYear()}-${String(now5.getMonth()+1).padStart(2,'0')}`))
+    .reduce((s,d)=>s+Object.keys(state.completions[d]).length,0);
+  const monthTotalNow = state.tasks.filter(t=>t.type==='长期'&&t.freq==='每日').length * now5.getDate()
+    + state.tasks.filter(t=>t.type!=='长期'&&t.dueDate&&t.dueDate.startsWith(`${now5.getFullYear()}-${String(now5.getMonth()+1).padStart(2,'0')}`)).length;
+  h+=`<div class="cal-entry" onclick="openCalendar()">
+    <div class="ce-ico">📅</div>
+    <div class="ce-body">
+      <div class="ce-title">日历全览</div>
+      <div class="ce-desc">${monthNames5[now5.getMonth()]} · 本月 ${monthDoneNow}/${monthTotalNow || 0} 完成</div>
+    </div>
+    <div class="ce-arrow">›</div>
+  </div>`;
 // 只显示今日应做的任务(长期每日 + 到期的临时任务)
 const tasksToday = tasksForToday();
 const f=state.taskFilter;
@@ -1134,8 +1163,9 @@ function renderCalendar(){
     .forEach(()=>monthTotal++);
   const monthRate = monthTotal ? Math.round(monthDone/monthTotal*100) : 0;
 
-  // 头部 + 月份导航
-  let h = `<div class="sec-h">日历全览</div>`;
+  // 返回按钮(全屏日历独立入口)
+  let h = `<div class="cal-back" onclick="closeCalendar()">返回今日</div>`;
+  h += `<div class="sec-h">日历全览</div>`;
   h += `<div class="cal-head">
     <div class="cal-nav"><button onclick="calPrevMonth()">‹</button></div>
     <div class="cal-title">${calYear} · ${monthNames[calMonth]}</div>
@@ -1246,7 +1276,7 @@ function renderWish(){
     <div class="r-ico">🛌<div class="r-count">${state.restCards}</div></div>
     <div class="r-info">
       <div class="r-name">今天我休息</div>
-      <div class="r-desc">使用后当天不打卡，<b>连击不中断</b>、<b>属性不掉落</b>。<br><span style="color:var(--muted);font-size:10px">可在「愿望宝箱」用 ${REST_CARD_PRICE} 🪙 兑换</span></div>
+      <div class="r-desc">使用后当天不打卡,连击不中断。</div>
     </div>
     <button class="r-use" ${canUse?'':'disabled'} onclick="useRestCard()">${canUse?'使用':'不可用'}</button>
   </div>`;
@@ -1265,18 +1295,17 @@ function renderWish(){
   if(fav) loot+=`<div class="lb">${fav.img?'🖼️':(fav.ico||'🎁')} 这个月已经给自己获得了第 ${fav.monthCount} 个「${fav.name}」啦！</div>`;
   else loot+=`<div class="lb">本月还没开启愿望，去完成任务赚币吧！</div>`;
   loot+=`<div class="lm">坚持打卡，把每一个小愿望都变成到手的奖励 ✨</div></div>`;
-  // v40.4 系统道具区:休息卡(可兑换,科学定价 80 🪙)
+  // v40.5 休息卡直接放战利品下方,只一个小"系统道具"徽章
   const canBuyRestCard = state.coins >= REST_CARD_PRICE;
-  let sysItems = `<div class="sec-h" style="margin-top:6px">系统道具</div>`;
-  sysItems += `<div class="chest system-item" style="border:1.5px dashed rgba(31,200,169,.4);background:rgba(31,200,169,.04)">
-    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:26px">🛌</div>
+  let sysItem = `<div class="chest" style="margin-top:10px;border:1px dashed rgba(31,200,169,.35);background:rgba(31,200,169,.04)">
+    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:24px">🛌</div>
     <div class="cinfo">
-      <div class="cname">今天我休息 · 休息卡 <span class="cfav" style="background:rgba(31,200,169,.15);color:#0a8b75">系统道具</span></div>
-      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张 · 用完可再兑</div>
+      <div class="cname">休息卡 <span style="font-size:9px;background:rgba(31,200,169,.15);color:#0a8b75;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">系统道具</span></div>
+      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张</div>
     </div>
     <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
   </div>`;
-  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+sysItems+loot;
+  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+loot+sysItem;
   // 宝箱筛选：全部 / 可兑换 / 不可兑换
   const wf=wishFilter||'全部';
   const wishAvail=state.wishes.filter(w=>state.coins>=w.cost).length;
@@ -1606,11 +1635,27 @@ function flyHeart(){
 }
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));
-  ['char','today','calendar','wish'].forEach(s=>document.getElementById('s-'+s).classList.toggle('active',s===t));
+  ['char','today','wish'].forEach(s=>document.getElementById('s-'+s).classList.toggle('active',s===t));
+  document.querySelector('.tabbar').classList.remove('hidden');
   if(t==='today'){formOpen=false;renderToday();}
   if(t==='char')renderChar();
-  if(t==='calendar')renderCalendar();
   if(t==='wish')renderWish();
+}
+
+// v40.5:日历作为今日页的内嵌入口(全屏覆盖,带返回)
+function openCalendar(){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('s-today').classList.remove('active');
+  document.getElementById('s-calendar').classList.add('active');
+  document.querySelector('.tabbar').classList.add('hidden');
+  renderCalendar();
+}
+function closeCalendar(){
+  document.getElementById('s-calendar').classList.remove('active');
+  document.getElementById('s-today').classList.add('active');
+  document.querySelector('.tabbar').classList.remove('hidden');
+  document.querySelector('.tab[data-t="today"]').classList.add('active');
+  renderToday();
 }
 document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>switchTab(x.dataset.t)));
 updateTop();renderToday();
