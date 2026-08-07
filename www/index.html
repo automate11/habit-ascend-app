@@ -1348,21 +1348,29 @@ function renderWish(){
   h+='</div>';
   // v40.5.3 休息卡放在筛选 tabs 正下方(系统道具单独显示)
   const canBuyRestCard = state.coins >= REST_CARD_PRICE;
-  h+=`<div class="chest" style="margin-top:10px;border:1px dashed rgba(31,200,169,.35);background:rgba(31,200,169,.04)">
-    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:24px">🛌</div>
-    <div class="cinfo">
-      <div class="cname">休息卡 <span style="font-size:9px;background:rgba(31,200,169,.15);color:#0a8b75;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">系统道具</span></div>
-      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张</div>
-    </div>
-    <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
-  </div>`;
+  // v40.5.5 休息卡按 wf 过滤:可兑换时只显示在「可兑换」/「全部」,不可兑换时只显示在「不可兑换」/「全部」
+  const restCardInFilter =
+    wf==='全部' ||
+    (wf==='可兑换' && canBuyRestCard) ||
+    (wf==='不可兑换' && !canBuyRestCard);
+  if(restCardInFilter){
+    h+=`<div class="chest" style="margin-top:10px;border:1px dashed rgba(31,200,169,.35);background:rgba(31,200,169,.04)">
+      <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:24px">🛌</div>
+      <div class="cinfo">
+        <div class="cname">休息卡 <span style="font-size:9px;background:rgba(31,200,169,.15);color:#0a8b75;padding:2px 6px;border-radius:6px;font-weight:700;margin-left:4px">系统道具</span></div>
+        <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张</div>
+      </div>
+      <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
+    </div>`;
+  }
   const wfShow=state.wishes.filter(w=>{
     if(wf==='全部')return true;
     if(wf==='可兑换')return state.coins>=w.cost;
     if(wf==='不可兑换')return state.coins<w.cost;
     return true;
   });
-  if(wfShow.length===0){
+  // v40.5.5 休息卡已显示时,就不显示「暂无愿望」(避免两个冲突提示)
+  if(wfShow.length===0 && !restCardInFilter){
     h+=`<div class="empty-tip">这个分类下暂无愿望，换一个看看吧 ✨</div>`;
   } else {
     wfShow.forEach(w=>{const can=state.coins>=w.cost;
