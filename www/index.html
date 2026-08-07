@@ -442,9 +442,10 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .cal-cell.empty{visibility:hidden;}
 .cal-cell.today{border:2px solid var(--xp1);background:rgba(31,200,169,.1);}
 .cal-cell.future{color:var(--muted);opacity:.6;}
-.cal-cell .cal-done{position:absolute;bottom:3px;display:flex;gap:1px;}
-.cal-cell .cal-done span{width:4px;height:4px;border-radius:50%;background:var(--xp1);}
-.cal-cell.full .cal-done span{background:var(--xp2);}
+.cal-cell .cal-done{position:absolute;bottom:2px;display:flex;gap:1.5px;align-items:center;justify-content:center;}
+.cal-cell .cal-done span{width:4px;height:4px;border-radius:50%;background:var(--muted);opacity:.5;transition:.2s;}
+.cal-cell .cal-done span.done{background:var(--xp1);opacity:1;box-shadow:0 0 3px rgba(31,200,169,.6);}
+.cal-cell .cal-done span.full-dot{width:7px;height:7px;background:linear-gradient(135deg,var(--xp1),var(--xp2));box-shadow:0 0 5px rgba(255,184,0,.6);}
 .cal-cell:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(31,200,169,.2);}
 .cal-cell.selected{background:linear-gradient(135deg,var(--xp1),var(--xp2));color:#fff;box-shadow:0 6px 18px rgba(31,200,169,.4);}
 .cal-legend{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:10px;color:var(--muted);}
@@ -1183,18 +1184,31 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const c = state.completions && state.completions[ds];
-    const doneCount = c ? Object.keys(c).length : 0;
-    // 当日应有任务数(用于判定 full)
-    const longToday = longDailyCount;
-    const tempToday = state.tasks.filter(t=>t.type!=='长期' && t.dueDate===ds).length;
-    const expectedToday = longToday + tempToday;
+    // 当日应有任务 id 列表(长期每日 + 到期临时)
+    const expectedIds = [];
+    state.tasks.filter(t=>t.type==='长期' && t.freq==='每日').forEach(t=>expectedIds.push(t.id));
+    state.tasks.filter(t=>t.type!=='长期' && t.dueDate===ds).forEach(t=>expectedIds.push(t.id));
+    const expectedToday = expectedIds.length;
+    // 全清判定:有任务且全部完成
+    const isFullComplete = expectedToday>0 && expectedIds.every(id=>c && c[id]);
     const isFuture = ds > todayStr_;
     const isToday = ds === todayStr_;
     const isSelected = ds === calSelectedDate;
-    const dots = Math.min(doneCount, 3);  // 最多显示 3 个点
-    h += `<div class="cal-cell ${isToday?'today':''} ${isFuture?'future':''} ${isSelected?'selected':''} ${doneCount>=expectedToday && expectedToday>0 ?'full':''}" onclick="calSelectDate('${ds}')">
+
+    // 渲染点:全清=单黄点;否则每个应有任务一个点(完成=绿,未完成=灰)
+    let dotsHtml = '';
+    if(isFullComplete){
+      dotsHtml = `<div class="cal-done"><span class="full-dot"></span></div>`;
+    } else if(expectedToday>0){
+      const dotsArr = expectedIds.map(id=>{
+        const done = !!(c && c[id]);
+        return `<span class="${done?'done':''}"></span>`;
+      }).join('');
+      dotsHtml = `<div class="cal-done">${dotsArr}</div>`;
+    }
+    h += `<div class="cal-cell ${isToday?'today':''} ${isFuture?'future':''} ${isSelected?'selected':''} ${isFullComplete?'full':''}" onclick="calSelectDate('${ds}')">
       <div>${d}</div>
-      ${dots>0?`<div class="cal-done">${'<span></span>'.repeat(dots)}</div>`:''}
+      ${dotsHtml}
     </div>`;
   }
   h += `</div>`;
