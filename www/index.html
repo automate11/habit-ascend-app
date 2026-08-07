@@ -402,13 +402,13 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .upload-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;background:#fafbfa;border:1px dashed var(--line);color:var(--muted);transition:.15s;}
 .upload-btn:hover{border-color:var(--xp1);color:#1e9b86;background:rgba(31,200,169,.06);}
 
-/* tabbar：3 个，今日居中放大 */
+/* tabbar：4 个，今日居中放大 */
 .tabbar{display:flex;background:#fff;border-top:1px solid var(--line);padding:6px 0 8px;}
 .tab{flex:1;text-align:center;padding:5px 0;font-size:10px;color:var(--muted);cursor:pointer;position:relative;}
 .tab .ti{font-size:18px;display:block;margin-bottom:2px;filter:grayscale(.5);opacity:.7;transition:.2s;}
 .tab.active{color:#1e9b86;font-weight:700;}
 .tab.active .ti{filter:none;opacity:1;}
-.tab.center .ti{font-size:26px;}
+.tab.center .ti{font-size:24px;}
 .tab.center.active .ti{transform:translateY(-3px) scale(1.15);filter:drop-shadow(0 0 8px rgba(31,200,169,.7));}
 .tab.active::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
   width:26px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--xp1),var(--xp2));}
@@ -427,6 +427,38 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 .spark{position:absolute;font-size:22px;animation:spark 1s ease-out forwards;}
 @keyframes spark{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.4) translateY(-20px)}}
 .hint{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;}
+
+/* ===== v40.4 日历视图 ===== */
+.cal-head{display:flex;justify-content:space-between;align-items:center;padding:4px 4px 12px;}
+.cal-title{font-size:17px;font-weight:800;color:var(--text);}
+.cal-nav{display:flex;gap:6px;}
+.cal-nav button{width:30px;height:30px;border-radius:50%;background:rgba(31,200,169,.1);color:var(--xp1);font-size:14px;font-weight:800;border:none;cursor:pointer;transition:.2s;}
+.cal-nav button:hover{background:var(--xp1);color:#fff;}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+.cal-weekdays div{text-align:center;font-size:10px;color:var(--muted);font-weight:700;padding:4px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-cell{aspect-ratio:1;border-radius:10px;background:rgba(255,255,255,.5);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700;position:relative;cursor:pointer;transition:.2s;color:var(--text);}
+.cal-cell.empty{visibility:hidden;}
+.cal-cell.today{border:2px solid var(--xp1);background:rgba(31,200,169,.1);}
+.cal-cell.future{color:var(--muted);opacity:.6;}
+.cal-cell .cal-done{position:absolute;bottom:3px;display:flex;gap:1px;}
+.cal-cell .cal-done span{width:4px;height:4px;border-radius:50%;background:var(--xp1);}
+.cal-cell.full .cal-done span{background:var(--xp2);}
+.cal-cell:hover{transform:scale(1.05);box-shadow:0 4px 12px rgba(31,200,169,.2);}
+.cal-cell.selected{background:linear-gradient(135deg,var(--xp1),var(--xp2));color:#fff;box-shadow:0 6px 18px rgba(31,200,169,.4);}
+.cal-legend{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:10px;color:var(--muted);}
+.cal-legend span{display:inline-flex;align-items:center;gap:4px;}
+.cal-legend .dot{width:8px;height:8px;border-radius:50%;}
+.cal-detail{margin-top:14px;padding:12px;background:rgba(255,255,255,.7);border-radius:14px;border:1px solid var(--line);}
+.cal-detail .cd-date{font-size:13px;font-weight:800;color:var(--xp1);margin-bottom:8px;}
+.cal-detail .cd-task{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12px;margin-bottom:4px;background:rgba(31,200,169,.05);}
+.cal-detail .cd-task.done{background:rgba(46,204,143,.15);text-decoration:line-through;opacity:.7;}
+.cal-detail .cd-task .cd-ico{font-size:14px;}
+.cal-detail .cd-empty{text-align:center;color:var(--muted);font-size:12px;padding:14px 0;}
+.cal-stats{display:flex;justify-content:space-around;margin-top:10px;padding:10px;background:linear-gradient(135deg,rgba(31,200,169,.08),rgba(255,184,0,.08));border-radius:12px;}
+.cal-stats .cs{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cal-stats .cs-num{font-size:18px;font-weight:900;color:var(--xp1);}
+.cal-stats .cs-lbl{font-size:10px;color:var(--muted);}
 
 /* ===== 移动端 / Capacitor 原生 App 适配 =====
  * 桌面端: 居中 396×850 "手机模拟器" + 阴影,看起来像截图
@@ -482,11 +514,13 @@ body{background:linear-gradient(165deg,#dff7ea,#fff3e0 70%);
 
   <div class="screen" id="s-char"></div>
   <div class="screen active" id="s-today"></div>
+  <div class="screen" id="s-calendar"></div>
   <div class="screen" id="s-wish"></div>
 
   <div class="tabbar">
     <div class="tab" data-t="char"><span class="ti">🛡️</span>角色</div>
     <div class="tab center active" data-t="today"><span class="ti">⚔️</span>今日</div>
+    <div class="tab" data-t="calendar"><span class="ti">📅</span>日历</div>
     <div class="tab" data-t="wish"><span class="ti">🎁</span>愿望</div>
   </div>
 
@@ -528,6 +562,8 @@ function saveState(){
       tasks: state.tasks, wishes: state.wishes,
       dailyBonus: state.dailyBonus, taskFilter: state.taskFilter,
       _lastCheckDay: state._lastCheckDay,
+      // v40.4 新增:每日完成记录(键为 YYYY-MM-DD)
+      completions: state.completions || {},
       // 6 维属性值（修复老 bug:之前直接改 ATTRS 全局常量,刷新就丢）
       attrs: Object.fromEntries(Object.entries(ATTRS).map(([k,v])=>[k, v.val])),
       wishFilter: wishFilter, achFilter: achFilter,
@@ -559,7 +595,9 @@ function loadState(){
       wishes: Array.isArray(s.wishes) ? s.wishes : state.wishes,
       dailyBonus: s.dailyBonus ?? state.dailyBonus,
       taskFilter: s.taskFilter ?? '全部',
-      _lastCheckDay: s._lastCheckDay
+      _lastCheckDay: s._lastCheckDay,
+      // v40.4 新增:每日完成记录
+      completions: s.completions || {}
     });
     // 恢复属性值(老存档可能没 attrs 字段)
     if(s.attrs && typeof s.attrs === 'object'){
@@ -596,6 +634,7 @@ function startFresh(){
   state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  state.completions={};  // v40.4:清空每日完成记录
   // 6 维属性值也归零
   Object.keys(ATTRS).forEach(k=>ATTRS[k].val=0);
   saveState();
@@ -637,6 +676,10 @@ const FREQS = {
   '长期':['每日','每周3次','每周5次','工作日','周末'],
   '临时':['今天截止','本周内','本月内'],
 };
+// v40.4:休息卡作为系统道具,可从愿望宝箱兑换
+// 科学定价:参考 21/42/66 天连击各送 1 张,平均产出节奏 ~50-66 天/张
+// 一个休息卡相当于"省一天打卡"(约 +30 金币产出),所以 80-100 金币合理
+const REST_CARD_PRICE = 80;
 // 难度×类型 → 固定科学奖励：临时任务 +50% bonus（即时性强化：Fogg模型中Prompt越近Reward越强）
 function rewardFor(diff, type){
   let [x,c]=DIFF[diff];
@@ -696,6 +739,8 @@ let bonusEditing=false;     // 今日奖励编辑表单开关
 
 // 启动时尝试加载存档
 loadState();
+// v40.4 老存档迁移:把旧的 t.done 转成每日 completions
+migrateDoneField();
 
 // 如果是 Capacitor 原生 App 且无存档:跳过 demo,空状态启动(自用版不留示例数据)
 const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
@@ -705,6 +750,7 @@ if(IS_NATIVE && !localStorage.getItem(STORAGE_KEY)){
   state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
+  state.completions={};  // v40.4
   Object.keys(ATTRS).forEach(k=>ATTRS[k].val=0);  // 属性值也归零
   saveState();
   console.log('[Init] Capacitor 原生首次启动,使用空状态');
@@ -721,8 +767,50 @@ const BONUS_PRESETS=[
   {ico:'😴',name:'今天早点睡',coin:8,exp:10},
 ];
 
-function todayDone(){return (state.tasks||[]).filter(t=>t.done===true).length;}
-function todayTotal(){return (state.tasks||[]).length;}
+// ========== 日期感知（v40.4 重构） ==========
+// 历史问题:t.done 是任务级永久标志,导致昨天打卡的任务今天还在「已完成」里、昨天没打卡的任务还在「今日」里
+// 新方案:每日完成情况独立记录,任务按 freq+dueDate 判断今日是否显示
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function isDoneToday(taskId){
+  const t=todayStr();
+  return !!(state.completions && state.completions[t] && state.completions[t][taskId]);
+}
+function markDoneToday(taskId){
+  const t=todayStr();
+  if(!state.completions) state.completions={};
+  if(!state.completions[t]) state.completions[t]={};
+  state.completions[t][taskId]=Date.now();
+}
+function unmarkDoneToday(taskId){
+  const t=todayStr();
+  if(state.completions && state.completions[t]) delete state.completions[t][taskId];
+}
+// 「今日」应该显示的任务:长期每日任务 + 到期的临时任务
+function tasksForToday(){
+  const t=todayStr();
+  return (state.tasks||[]).filter(task=>{
+    if(task.type==='长期' && task.freq==='每日') return true;
+    if(task.type!=='长期') return task.dueDate===t;
+    return false;
+  });
+}
+// 兼容旧版(过渡期):如果没有 completions 字段,从 t.done 迁移
+function migrateDoneField(){
+  if(!state.completions && state.tasks && state.tasks.some(t=>t.done)){
+    state.completions={};
+    state.completions[todayStr()]={};
+    state.tasks.forEach(t=>{ if(t.done) state.completions[todayStr()][t.id]=Date.now(); });
+    console.log('[迁移] 旧 t.done 已迁移到每日 completions');
+  }
+  // 永久任务标记 done:删除(每日刷新)
+  if(state.tasks) state.tasks.forEach(t=>{ if(t.type==='长期' && t.freq==='每日') delete t.done; });
+}
+
+function todayDone(){return tasksForToday().filter(t=>isDoneToday(t.id)).length;}
+function todayTotal(){return tasksForToday().length;}
 function milkMonth(){const w=state.wishes.find(x=>x.ico==='🧋');return w?w.monthCount:0;}
 function isAchDone(a){
   const gv=typeof a.goal==='function'?a.goal():a.goal;
@@ -781,12 +869,13 @@ function questCard(t, idx){
   const palette = t.type==='临时' ? TODAY_COLORS : LONG_COLORS;
   const c = palette[idx % palette.length];
   const tcls = t.type==='临时'?'quest-today':'quest-long';
-  return `<div class="quest ${t.done?'done':''} ${tcls}" style="--attr:${ATTRS[t.attr].color};--card-color:${c};--card-bg1:${hexToRgba(c,.06)};--card-bg2:${hexToRgba(c,.03)};--card-border:${hexToRgba(c,.2)};--card-shadow:${hexToRgba(c,.08)}">
+  const doneToday = isDoneToday(t.id);
+  return `<div class="quest ${doneToday?'done':''} ${tcls}" style="--attr:${ATTRS[t.attr].color};--card-color:${c};--card-bg1:${hexToRgba(c,.06)};--card-bg2:${hexToRgba(c,.03)};--card-border:${hexToRgba(c,.2)};--card-shadow:${hexToRgba(c,.08)}">
     <div class="glow"></div><button class="qdel" onclick="delTask(${t.id})" title="删除任务">✕</button><div class="qrow"><div class="qleft"><div class="qname">${t.name}</div>
       <div class="qmeta"><span class="chip attr">${ATTRS[t.attr].icon} ${t.attr}</span>
         <span class="chip">${t.freq}</span><span class="chip">${t.diff==='难'?'🔴':t.diff==='中'?'🟡':'🟢'} ${t.diff}</span></div></div>
       <div class="qreward"><span class="xp">+${t.xp} EXP</span><span class="gc">+${t.coin} 🪙</span></div></div>
-    <button class="attack" onclick="checkIn(event,${t.id})">${t.done?'✓ 已完成':'⚔ 出击打卡'}</button></div>`;
+    <button class="attack" onclick="checkIn(event,${t.id})">${doneToday?'✓ 已完成':'⚔ 出击打卡'}</button></div>`;
 }
 
 function renderToday(){
@@ -839,12 +928,15 @@ function renderToday(){
       </div>
     </div>`;
   }
-const f=state.taskFilter; const ft=(ts)=>f==='全部'?ts:(f==='待完成'?ts.filter(t=>!t.done):ts.filter(t=>t.done));
+// 只显示今日应做的任务(长期每日 + 到期的临时任务)
+const tasksToday = tasksForToday();
+const f=state.taskFilter;
+const ft=(ts)=>f==='全部'?ts:(f==='待完成'?ts.filter(t=>!isDoneToday(t.id)):ts.filter(t=>isDoneToday(t.id)));
   h+='<div class="task-filter">';
   ['全部','待完成','已完成'].forEach(v=>h+=`<button class="${f===v?'on':''}" onclick="setTaskFilter('${v}')">${v}</button>`);
   h+='</div>';
-  const longT=ft(state.tasks.filter(t=>t.type==='长期'));
-  const tempT=ft(state.tasks.filter(t=>t.type!=='长期'));
+  const longT=ft(tasksToday.filter(t=>t.type==='长期'));
+  const tempT=ft(tasksToday.filter(t=>t.type!=='长期'));
   if(tempT.length){
     h+=`<div class="ts temp"><div class="ts-head"><div class="ts-badge"><svg viewBox="0 0 24 24" fill="#fff"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="ts-name">今日任务</div><div class="ts-cnt">${tempT.length}</div></div><div class="ts-line"></div>`;
     tempT.forEach((t,i)=>h+=questCard(t,i));
@@ -1004,17 +1096,157 @@ function showTierInfo(idx){
   }
   cap.innerHTML=detail;
 }
+
+// ========== v40.4 日历视图 ==========
+let calYear, calMonth, calSelectedDate;  // 月份用 0-11 表示
+function initCalendar(){
+  const now = new Date();
+  calYear = now.getFullYear();
+  calMonth = now.getMonth();
+  calSelectedDate = todayStr();
+}
+initCalendar();
+function renderCalendar(){
+  const el = document.getElementById('s-calendar');
+  if(!el) return;
+  const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  // 月份第一天是星期几(0=周日,1=周一...)
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const todayStr_ = todayStr();
+  const todayDate = new Date();
+  const isCurrentMonth = calYear === todayDate.getFullYear() && calMonth === todayDate.getMonth();
+
+  // 本月完成统计
+  let monthDone = 0, monthTotal = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const c = state.completions && state.completions[ds];
+    if(c){
+      const ids = Object.keys(c);
+      monthDone += ids.length;
+    }
+  }
+  // 本月期望任务数:长期每日任务 * 本月天数 + 当月到期的临时任务
+  const longDailyCount = state.tasks.filter(t=>t.type==='长期' && t.freq==='每日').length;
+  monthTotal = longDailyCount * daysInMonth;
+  state.tasks.filter(t=>t.type!=='长期' && t.dueDate && t.dueDate.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`))
+    .forEach(()=>monthTotal++);
+  const monthRate = monthTotal ? Math.round(monthDone/monthTotal*100) : 0;
+
+  // 头部 + 月份导航
+  let h = `<div class="sec-h">日历全览</div>`;
+  h += `<div class="cal-head">
+    <div class="cal-nav"><button onclick="calPrevMonth()">‹</button></div>
+    <div class="cal-title">${calYear} · ${monthNames[calMonth]}</div>
+    <div class="cal-nav"><button onclick="calNextMonth()">›</button></div>
+  </div>`;
+
+  // 星期表头(周一开头,符合中国习惯)
+  h += `<div class="cal-weekdays"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>`;
+
+  // 日期格子
+  h += `<div class="cal-grid">`;
+  // 月初偏移:把周日(0)偏移为 6,周一(1)偏移为 0
+  const offset = firstDay === 0 ? 6 : firstDay - 1;
+  for(let i=0; i<offset; i++) h += `<div class="cal-cell empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const c = state.completions && state.completions[ds];
+    const doneCount = c ? Object.keys(c).length : 0;
+    // 当日应有任务数(用于判定 full)
+    const longToday = longDailyCount;
+    const tempToday = state.tasks.filter(t=>t.type!=='长期' && t.dueDate===ds).length;
+    const expectedToday = longToday + tempToday;
+    const isFuture = ds > todayStr_;
+    const isToday = ds === todayStr_;
+    const isSelected = ds === calSelectedDate;
+    const dots = Math.min(doneCount, 3);  // 最多显示 3 个点
+    h += `<div class="cal-cell ${isToday?'today':''} ${isFuture?'future':''} ${isSelected?'selected':''} ${doneCount>=expectedToday && expectedToday>0 ?'full':''}" onclick="calSelectDate('${ds}')">
+      <div>${d}</div>
+      ${dots>0?`<div class="cal-done">${'<span></span>'.repeat(dots)}</div>`:''}
+    </div>`;
+  }
+  h += `</div>`;
+
+  // 图例
+  h += `<div class="cal-legend">
+    <span><span class="dot" style="background:var(--xp1)"></span>已完成</span>
+    <span><span class="dot" style="background:var(--xp2)"></span>全清</span>
+    <span><span class="dot" style="background:var(--muted)"></span>未完成</span>
+  </div>`;
+
+  // 本月统计
+  h += `<div class="cal-stats">
+    <div class="cs"><div class="cs-num">${monthDone}</div><div class="cs-lbl">本月完成</div></div>
+    <div class="cs"><div class="cs-num">${monthTotal}</div><div class="cs-lbl">应有任务</div></div>
+    <div class="cs"><div class="cs-num">${monthRate}%</div><div class="cs-lbl">完成率</div></div>
+  </div>`;
+
+  // 选中日期详情
+  h += renderCalDetail(calSelectedDate);
+
+  el.innerHTML = h;
+}
+
+function renderCalDetail(dateStr){
+  // 当天的任务列表
+  const longT = state.tasks.filter(t=>t.type==='长期' && t.freq==='每日');
+  const tempT = state.tasks.filter(t=>t.type!=='长期' && t.dueDate===dateStr);
+  const c = state.completions && state.completions[dateStr];
+  const allTasks = [...longT, ...tempT];
+  let h = `<div class="cal-detail">`;
+  // 友好日期
+  const d = new Date(dateStr);
+  const weekdays = ['周日','周一','周二','周三','周四','周五','周六'];
+  const friendlyDate = `${d.getMonth()+1}月${d.getDate()}日 · ${weekdays[d.getDay()]}`;
+  h += `<div class="cd-date">📍 ${friendlyDate}</div>`;
+  if(allTasks.length === 0){
+    h += `<div class="cd-empty">这天没有任务,自由日 ✨</div>`;
+  } else {
+    allTasks.forEach(t=>{
+      const done = c && c[t.id];
+      const attrColor = ATTRS[t.attr] ? ATTRS[t.attr].color : '#999';
+      h += `<div class="cd-task ${done?'done':''}">
+        <span class="cd-ico">${ATTRS[t.attr]?.icon || '📌'}</span>
+        <span style="flex:1;color:${attrColor}">${t.name}</span>
+        <span style="font-size:11px;color:var(--muted)">${t.freq}</span>
+        <span style="font-size:14px">${done?'✅':'⚪'}</span>
+      </div>`;
+    });
+  }
+  h += `</div>`;
+  return h;
+}
+
+function calPrevMonth(){
+  calMonth--;
+  if(calMonth < 0){ calMonth = 11; calYear--; }
+  calSelectedDate = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  renderCalendar();
+}
+function calNextMonth(){
+  calMonth++;
+  if(calMonth > 11){ calMonth = 0; calYear++; }
+  const dim = new Date(calYear, calMonth+1, 0).getDate();
+  calSelectedDate = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  renderCalendar();
+}
+function calSelectDate(ds){
+  calSelectedDate = ds;
+  renderCalendar();
+}
+
 function renderWish(){
   const el=document.getElementById('s-wish');
-  // 道具区：「今天我休息」卡
-  const canUse=state.restCards>0 && state.restUsedThisWeek<1;
-  const weekLimitTxt=state.restUsedThisWeek>=1?'本周已用':'每周限用 1 张';
+  // 道具区：「今天我休息」卡(v40.4 取消每周限用,持有即可用)
+  const canUse=state.restCards>0;
   let restSec=`<div class="sec-h">我的道具</div>`;
   restSec+=`<div class="rest-card">
     <div class="r-ico">🛌<div class="r-count">${state.restCards}</div></div>
     <div class="r-info">
       <div class="r-name">今天我休息</div>
-      <div class="r-desc">使用后当天不打卡，<b>连击不中断</b>、<b>属性不掉落</b>。${weekLimitTxt}。</div>
+      <div class="r-desc">使用后当天不打卡，<b>连击不中断</b>、<b>属性不掉落</b>。<br><span style="color:var(--muted);font-size:10px">可在「愿望宝箱」用 ${REST_CARD_PRICE} 🪙 兑换</span></div>
     </div>
     <button class="r-use" ${canUse?'':'disabled'} onclick="useRestCard()">${canUse?'使用':'不可用'}</button>
   </div>`;
@@ -1033,7 +1265,18 @@ function renderWish(){
   if(fav) loot+=`<div class="lb">${fav.img?'🖼️':(fav.ico||'🎁')} 这个月已经给自己获得了第 ${fav.monthCount} 个「${fav.name}」啦！</div>`;
   else loot+=`<div class="lb">本月还没开启愿望，去完成任务赚币吧！</div>`;
   loot+=`<div class="lm">坚持打卡，把每一个小愿望都变成到手的奖励 ✨</div></div>`;
-  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+loot;
+  // v40.4 系统道具区:休息卡(可兑换,科学定价 80 🪙)
+  const canBuyRestCard = state.coins >= REST_CARD_PRICE;
+  let sysItems = `<div class="sec-h" style="margin-top:6px">系统道具</div>`;
+  sysItems += `<div class="chest system-item" style="border:1.5px dashed rgba(31,200,169,.4);background:rgba(31,200,169,.04)">
+    <div class="ico" style="background:linear-gradient(135deg,#1fc8a9,#0a8b75);color:#fff;font-size:26px">🛌</div>
+    <div class="cinfo">
+      <div class="cname">今天我休息 · 休息卡 <span class="cfav" style="background:rgba(31,200,169,.15);color:#0a8b75">系统道具</span></div>
+      <div class="cmeta">${REST_CARD_PRICE} 🪙 · 持有 ${state.restCards} 张 · 用完可再兑</div>
+    </div>
+    <button class="redeem" ${canBuyRestCard?'':'disabled'} onclick="buyRestCard()">${canBuyRestCard?'兑换':'币不足'}</button>
+  </div>`;
+  let h=restSec+'<div class="sec-h">愿望宝箱</div>'+sysItems+loot;
   // 宝箱筛选：全部 / 可兑换 / 不可兑换
   const wf=wishFilter||'全部';
   const wishAvail=state.wishes.filter(w=>state.coins>=w.cost).length;
@@ -1077,21 +1320,14 @@ function renderWish(){
   el.innerHTML=h;
 }
 function checkIn(ev,id){
-  const t=state.tasks.find(x=>x.id===id); if(!t||t.done)return; ev.stopPropagation();
+  const t=state.tasks.find(x=>x.id===id); if(!t||isDoneToday(id))return; ev.stopPropagation();
   const card=ev.target.closest('.quest'); const r=card.getBoundingClientRect(); const pr=document.querySelector('.phone').getBoundingClientRect();
   const x=r.left-pr.left+r.width/2-20, y=r.top-pr.top+10;
-  // 每周一自动重置休息卡周限额（防止滥用）
-  if(state._lastCheckDay){
-    const last=new Date(state._lastCheckDay);
-    const now=new Date();
-    if(now.getDay()===1 && now.toDateString()!==state._lastCheckDay){
-      state.restUsedThisWeek=0;
-    }
-  }
   state._lastCheckDay=new Date().toDateString();
   // 记录属性变化前的值（用于里程碑判定）
   const attrName=t.attr; const attrBefore=ATTRS[attrName].val;
-  t.done=true; state.coins+=t.coin; state.xp+=t.xp; ATTRS[attrName].val=Math.min(100,ATTRS[attrName].val+ATTR_GAIN[t.diff]);
+  markDoneToday(id);  // 用每日完成表(替代旧的 t.done)
+  state.coins+=t.coin; state.xp+=t.xp; ATTRS[attrName].val=Math.min(100,ATTRS[attrName].val+ATTR_GAIN[t.diff]);
   // 连击天数：当日完成全部任务，streak+1
   if(todayDone()===todayTotal() && todayTotal()>0) state.streak+=1;
   // 连击奖励触发（变比强化 Skinner：不可预测的惊喜释放最多多巴胺）
@@ -1194,7 +1430,10 @@ function addTask(){
   const name=document.getElementById('nt-name').value.trim(); if(!name)return;
   const freq=document.getElementById('nt-freq').value;
   const r=rewardFor(sel.diff,sel.type);
-  state.tasks.push({id:Date.now(),name,type:sel.type,attr:sel.attr,freq,diff:sel.diff,xp:r.xp,coin:r.coin,done:false});
+  const task={id:Date.now(),name,type:sel.type,attr:sel.attr,freq,diff:sel.diff,xp:r.xp,coin:r.coin};
+  // 临时任务设置到期日,默认今天(可让用户后续选日期,先简化)
+  if(sel.type!=='长期') task.dueDate = todayStr();
+  state.tasks.push(task);
   // 新增任务后重置奖励：已领取过的奖励回到未领取锁定态，必须把所有任务再次全清才能领
   state.dailyBonus.claimed = false;
   formOpen=false; renderToday();
@@ -1258,6 +1497,27 @@ function redeem(id){
     saveState();  // 第二步落盘（快乐值也持久化）
   });
 }
+
+// v40.4 兑换休息卡(系统道具,不进入 wishes 列表,直接 state.restCards+1)
+function buyRestCard(){
+  if(state.coins < REST_CARD_PRICE){
+    alert('金币不足,继续打卡赚币吧 💪');
+    return;
+  }
+  if(!confirm(`确定用 ${REST_CARD_PRICE} 🪙 兑换 1 张「今天我休息」卡吗?`)) return;
+  state.coins -= REST_CARD_PRICE;
+  state.restCards += 1;
+  // 用系统奖励特效
+  const lu=document.getElementById('levelup');
+  lu.querySelector('.lu').textContent='+1 休息卡 🛌';
+  lu.querySelector('.sub').textContent=`花了 ${REST_CARD_PRICE} 🪙 给自己一个喘气的机会`;
+  lu.classList.add('show');
+  setTimeout(()=>lu.classList.remove('show'), 1400);
+  triggerHaptic('success');
+  updateTop();
+  renderWish();
+  saveState();
+}
 // 兑换庆祝特效：屏幕中央弹出"奖励自己"类文字，1.2s 后回调
 function rewardCelebrateFX(w, onDone){
   const phrase=REWARD_PHRASES[Math.floor(Math.random()*REWARD_PHRASES.length)];
@@ -1287,12 +1547,11 @@ function isRestUsedToday(){
   return last && last.date===today;
 }
 function useRestCard(){
-  if(state.restCards<=0 || state.restUsedThisWeek>=1) return;
+  if(state.restCards<=0) return;  // v40.4 取消每周限用,持有即可用
   // 二次确认弹窗
   showRestConfirm(()=>{
-    if(state.restCards<=0 || state.restUsedThisWeek>=1) return;
+    if(state.restCards<=0) return;
     state.restCards--;
-    state.restUsedThisWeek++;
     const today=new Date();
     const m=String(today.getMonth()+1).padStart(2,'0');
     const d=String(today.getDate()).padStart(2,'0');
@@ -1347,8 +1606,11 @@ function flyHeart(){
 }
 function switchTab(t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.t===t));
-  ['char','today','wish'].forEach(s=>document.getElementById('s-'+s).classList.toggle('active',s===t));
-  if(t==='today'){formOpen=false;renderToday();} if(t==='char')renderChar(); if(t==='wish')renderWish();
+  ['char','today','calendar','wish'].forEach(s=>document.getElementById('s-'+s).classList.toggle('active',s===t));
+  if(t==='today'){formOpen=false;renderToday();}
+  if(t==='char')renderChar();
+  if(t==='calendar')renderCalendar();
+  if(t==='wish')renderWish();
 }
 document.querySelectorAll('.tab').forEach(x=>x.addEventListener('click',()=>switchTab(x.dataset.t)));
 updateTop();renderToday();
