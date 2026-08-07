@@ -646,7 +646,7 @@ function startFresh(){
   // 直接覆写 state 为空存档
   state.level=1; state.xp=0; state.xpmax=levelReq(1);
   state.coins=0; state.happiness=0; state.streak=0;
-  state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
+  state.restCards=2; state.restUsed=[]; state.restUsedThisWeek=0;  // v40.5.4 系统默认给 2 张休息卡
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
   state.completions={};  // v40.4:清空每日完成记录
@@ -762,7 +762,7 @@ const IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && wi
 if(IS_NATIVE && !localStorage.getItem(STORAGE_KEY)){
   state.level=1; state.xp=0; state.xpmax=levelReq(1);
   state.coins=0; state.happiness=0; state.streak=0;
-  state.restCards=0; state.restUsed=[]; state.restUsedThisWeek=0;
+  state.restCards=2; state.restUsed=[]; state.restUsedThisWeek=0;  // v40.5.4 系统默认给 2 张休息卡
   state.tasks=[]; state.wishes=[];
   state.dailyBonus={name:'',ico:'',coin:0,exp:0,claimed:false};
   state.completions={};  // v40.4
@@ -812,6 +812,16 @@ function tasksForToday(){
     return false;
   });
 }
+// v40.5.4 「历史某天应有任务」:考虑创建日期(createdAt),只在 createdAt <= 该天 时算
+function tasksForDate(dateStr){
+  return (state.tasks||[]).filter(task=>{
+    // 创建日期在该天之后 → 不算
+    if(task.createdAt && task.createdAt > dateStr) return false;
+    if(task.type==='长期' && task.freq==='每日') return true;
+    if(task.type!=='长期') return task.dueDate===dateStr;
+    return false;
+  });
+}
 // 兼容旧版(过渡期):如果没有 completions 字段,从 t.done 迁移
 function migrateDoneField(){
   if(!state.completions && state.tasks && state.tasks.some(t=>t.done)){
@@ -822,6 +832,10 @@ function migrateDoneField(){
   }
   // 永久任务标记 done:删除(每日刷新)
   if(state.tasks) state.tasks.forEach(t=>{ if(t.type==='长期' && t.freq==='每日') delete t.done; });
+  // v40.5.4 老任务补 createdAt(置 1970 → 永远算历史日)
+  if(state.tasks) state.tasks.forEach(t=>{
+    if(!t.createdAt) t.createdAt = '1970-01-01';
+  });
 }
 
 function todayDone(){return tasksForToday().filter(t=>isDoneToday(t.id)).length;}
@@ -948,8 +962,12 @@ function renderToday(){
   const now5=new Date();
   const monthDoneNow = Object.keys(state.completions||{}).filter(d=>d.startsWith(`${now5.getFullYear()}-${String(now5.getMonth()+1).padStart(2,'0')}`))
     .reduce((s,d)=>s+Object.keys(state.completions[d]).length,0);
-  const monthTotalNow = state.tasks.filter(t=>t.type==='长期'&&t.freq==='每日').length * now5.getDate()
-    + state.tasks.filter(t=>t.type!=='长期'&&t.dueDate&&t.dueDate.startsWith(`${now5.getFullYear()}-${String(now5.getMonth()+1).padStart(2,'0')}`)).length;
+  // v40.5.4 按天累计:每天只算 createdAt <= 该天的长期每日
+  let monthTotalNow = 0;
+  for(let d=1; d<=now5.getDate(); d++){
+    const ds = `${now5.getFullYear()}-${String(now5.getMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    monthTotalNow += tasksForDate(ds).length;
+  }
   h+=`<div class="cal-entry" onclick="openCalendar()">
     <div class="ce-ico">📅</div>
     <div class="ce-body">
@@ -1157,11 +1175,12 @@ function renderCalendar(){
       monthDone += ids.length;
     }
   }
-  // 本月期望任务数:长期每日任务 * 本月天数 + 当月到期的临时任务
-  const longDailyCount = state.tasks.filter(t=>t.type==='长期' && t.freq==='每日').length;
-  monthTotal = longDailyCount * daysInMonth;
-  state.tasks.filter(t=>t.type!=='长期' && t.dueDate && t.dueDate.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`))
-    .forEach(()=>monthTotal++);
+  // v40.5.4 本月期望任务数:每天累计(createdAt <= 该天 的长期每日 + 该天到期的临时)
+  monthTotal = 0;
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    monthTotal += tasksForDate(ds).length;
+  }
   const monthRate = monthTotal ? Math.round(monthDone/monthTotal*100) : 0;
 
   // 返回按钮(全屏日历独立入口)
@@ -1184,10 +1203,10 @@ function renderCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const c = state.completions && state.completions[ds];
-    // 当日应有任务 id 列表(长期每日 + 到期临时)
+    // v40.5.4 当日应有任务 id 列表(长期每日 + 到期临时),且 createdAt <= ds
     const expectedIds = [];
-    state.tasks.filter(t=>t.type==='长期' && t.freq==='每日').forEach(t=>expectedIds.push(t.id));
-    state.tasks.filter(t=>t.type!=='长期' && t.dueDate===ds).forEach(t=>expectedIds.push(t.id));
+    state.tasks.filter(t=>t.type==='长期' && t.freq==='每日' && (!t.createdAt || t.createdAt<=ds)).forEach(t=>expectedIds.push(t.id));
+    state.tasks.filter(t=>t.type!=='长期' && t.dueDate===ds && (!t.createdAt || t.createdAt<=ds)).forEach(t=>expectedIds.push(t.id));
     const expectedToday = expectedIds.length;
     // 全清判定:有任务且全部完成
     const isFullComplete = expectedToday>0 && expectedIds.every(id=>c && c[id]);
@@ -1237,9 +1256,9 @@ function renderCalendar(){
 }
 
 function renderCalDetail(dateStr){
-  // 当天的任务列表
-  const longT = state.tasks.filter(t=>t.type==='长期' && t.freq==='每日');
-  const tempT = state.tasks.filter(t=>t.type!=='长期' && t.dueDate===dateStr);
+  // v40.5.4 当天的任务列表(只算 createdAt <= dateStr 的长期每日)
+  const longT = (state.tasks||[]).filter(t=>t.type==='长期' && t.freq==='每日' && (!t.createdAt || t.createdAt<=dateStr));
+  const tempT = (state.tasks||[]).filter(t=>t.type!=='长期' && t.dueDate===dateStr && (!t.createdAt || t.createdAt<=dateStr));
   const c = state.completions && state.completions[dateStr];
   const allTasks = [...longT, ...tempT];
   let h = `<div class="cal-detail">`;
@@ -1313,14 +1332,19 @@ function renderWish(){
   else loot+=`<div class="lb">本月还没开启愿望，去完成任务赚币吧！</div>`;
   loot+=`<div class="lm">坚持打卡，把每一个小愿望都变成到手的奖励 ✨</div></div>`;
   let h=restSec+'<div class="sec-h">愿望宝箱</div>'+loot;
-  // 宝箱筛选：全部 / 可兑换 / 不可兑换
+  // 宝箱筛选：全部 / 可兑换 / 不可兑换(v40.5.4 包含休息卡)
   const wf=wishFilter||'全部';
   const wishAvail=state.wishes.filter(w=>state.coins>=w.cost).length;
   const wishLocked=state.wishes.length-wishAvail;
+  const restCardAvail = state.coins >= REST_CARD_PRICE ? 1 : 0;
+  const restCardLocked = 1 - restCardAvail;
+  const totalAll_ = state.wishes.length + 1;  // +1 是休息卡
+  const totalAvail = wishAvail + restCardAvail;
+  const totalLocked = wishLocked + restCardLocked;
   h+='<div class="task-filter">';
-  h+=`<button class="${wf==='全部'?'on':''}" onclick="setWishFilter('全部')">全部 ${state.wishes.length}</button>`;
-  h+=`<button class="${wf==='可兑换'?'on':''}" onclick="setWishFilter('可兑换')">可兑换 ${wishAvail}</button>`;
-  h+=`<button class="${wf==='不可兑换'?'on':''}" onclick="setWishFilter('不可兑换')">不可兑换 ${wishLocked}</button>`;
+  h+=`<button class="${wf==='全部'?'on':''}" onclick="setWishFilter('全部')">全部 ${totalAll_}</button>`;
+  h+=`<button class="${wf==='可兑换'?'on':''}" onclick="setWishFilter('可兑换')">可兑换 ${totalAvail}</button>`;
+  h+=`<button class="${wf==='不可兑换'?'on':''}" onclick="setWishFilter('不可兑换')">不可兑换 ${totalLocked}</button>`;
   h+='</div>';
   // v40.5.3 休息卡放在筛选 tabs 正下方(系统道具单独显示)
   const canBuyRestCard = state.coins >= REST_CARD_PRICE;
@@ -1477,6 +1501,8 @@ function addTask(){
   const freq=document.getElementById('nt-freq').value;
   const r=rewardFor(sel.diff,sel.type);
   const task={id:Date.now(),name,type:sel.type,attr:sel.attr,freq,diff:sel.diff,xp:r.xp,coin:r.coin};
+  // v40.5.4 记录任务创建日期,日历只从 createdAt 起算"应有任务"
+  task.createdAt = todayStr();
   // 临时任务设置到期日,默认今天(可让用户后续选日期,先简化)
   if(sel.type!=='长期') task.dueDate = todayStr();
   state.tasks.push(task);
